@@ -1,3 +1,11 @@
+//
+// asynchronous tcp client
+// -----------------------
+//
+// December 2016
+// Juan Pablo Cordova Echeverria (jpcordovae@gmail.com)
+//
+
 #ifndef TCP_CLIENT_HPP
 #define TCP_CLIENT_HPP
 

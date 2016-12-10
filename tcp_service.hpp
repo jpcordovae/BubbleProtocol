@@ -1,12 +1,9 @@
 //
-// asynchronous tcp DAQ service for microcontrollers
+// asynchronous tcp service 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //
-// July 2015 
+// July 2016 
 // Juan Pablo Cordova E. (jpcordovae@gmail.com)
-//
-// Orignal file asynchronous tcp service example 
-// from Christopher M. Kohlhoff (chris@kohlhoff.com)
 //
 
 #ifndef TCP_DB_SERVICE_HPP
@@ -26,40 +23,40 @@
 #include "common.hpp"
 
 using boost::asio::ip::tcp;
+using boost::asio::deadline_timer;
+
 
 class session
   : public std::enable_shared_from_this<session>
 {
 public:
-
-  void set_query_begin(std::string _qbegin) { query_begin = _qbegin; }
-  void set_query_end(std::string _qend){ query_end = _qend; }
-  std::string get_query_begin() { return query_begin; }
-  std::string get_query_end() { return query_end; }
-
-  session(tcp::socket socket)
-    : socket_(std::move(socket))
+  
+  session(tcp::socket socket) : m_socket(std::move(socket))
   {
   }
      
   void start()
   {
     do_read();
+    do_write(std::string("BUUBLE PROTOCOL V0.1\n"));
   }
 
 private:
   void do_read()
   {
     auto self(shared_from_this());
-    boost::asio::async_read_until(socket_,input_buffer_,'\n',
-				  [this, self](boost::system::error_code ec, std::size_t length) // uncomment commented
+    boost::asio::async_read_until(m_socket,input_buffer_,'\n',
+				  [this, self](boost::system::error_code ec, std::size_t length) 
 				  {
 				    if (!ec)
 				      {
 					try
 					  {
-					  	std::cout << std::string(boost::asio::buffer_cast<const char*>(input_buffer_.data()),length);
-						input_buffer_.consume(length);
+					    //say hello to client
+					    std::string sData = std::string(boost::asio::buffer_cast<const char*>(input_buffer_.data()),length);
+					    std::cout << sData;
+					    input_buffer_.consume(length);
+					    
 					  }catch(std::exception &e)
 					  {
 					    std::cerr << "exception: " << e.what() << std::endl;
@@ -69,31 +66,24 @@ private:
 				  });
   }
 
-  void do_write(std::size_t length)
+  void do_write(std::string _msg)
   {
     auto self(shared_from_this());
-    boost::asio::async_write(socket_, boost::asio::buffer(data_, length),
+    boost::asio::async_write(m_socket, boost::asio::buffer(_msg.c_str(), _msg.size()),
 			     [this, self](boost::system::error_code ec, std::size_t)
 			     {
 			       if (!ec)
 				 {
-				   do_read();
+				   //do_read();
 				 }
 			     });
   }
-
-  void parse_string(std::string _message)
-  {
-    
-  }
-
-  boost::asio::streambuf input_buffer_;
-  tcp::socket socket_;
-  enum { max_length = 1024 };
-  char data_[max_length];
-  std::string query_begin;
-  std::string query_end;
   
+  boost::asio::streambuf input_buffer_;
+  boost::asio::streambuf m_output_buffer;
+  tcp::socket m_socket;
+  //deadline_timer m_timer;
+  int m_timed_out;
 };
 
 /*************************************************/
@@ -105,14 +95,10 @@ public:
     : acceptor_(io_service, tcp::endpoint(tcp::v4(), port)),
       socket_(io_service)
   {
+    m_io_service = &io_service;
     do_accept();
   }
    
-  void set_query_begin(std::string _qbegin) { query_begin = _qbegin; }
-  void set_query_end(std::string _qend){ query_end = _qend; }
-  std::string get_query_begin() { return query_begin; }
-  std::string get_query_end() { return query_end; }
-
 private:
   void do_accept()
   {
@@ -125,8 +111,6 @@ private:
 				 		std::cout << "new session from IP (TODO)" << std::endl; //TODO: make this debug line
 						#endif
 				 		std::shared_ptr<session> my_session = std::make_shared<session>(std::move(socket_));
-				 		my_session->set_query_begin(query_begin);
-				 		my_session->set_query_end(query_end);
 				 		my_session->start();
 			       		}
 					do_accept();
@@ -135,9 +119,7 @@ private:
 
   tcp::acceptor acceptor_;
   tcp::socket socket_;
-  std::string query_begin;
-  std::string query_end;
-
+  boost::asio::io_service *m_io_service;
 };
 
 #endif

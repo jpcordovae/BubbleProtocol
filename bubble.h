@@ -17,40 +17,24 @@
 #define BLT_COMMAND  0x04 // command other devices
 
 // IO types (physcal connections)
-enum enIOTypes { ANALOG, DIGITAL };
+enum enIOTypes { ANALOG_INPUT, ANALOG_OUTPUT, DIGITAL_INPUT, DIGITAL_OUTPUT };
 
 #include <stdio.h>
 #include <stdint.h>
 
-typedef struct stBubble {
-  uint16_t u16_size;
-  uint16_t u16_BLT;
-  uint16_t u16_pyload[BP_PAYLOAD_SIZE]; // end line included
-}stBubble;
+enum session_handshake { NONE, WELCOME, VERSION_CHECK, ACCEPTED, REJECTED };
 
-typedef struct stIO{
-char name[BP_MAX_STRING_LENGTH];
-enum enIOTypes type;
-union value { float fValue; };
-} stIO;
-
-//read functions
-//void (*PROTOCOL_FUNCTION)(const uint8_t *_buffer, size_t _buffersize);
-//void (*UPDATE_FUNCTION)(const uint8_t *buffer, size_t _buffersize);
-//void (*COMMAND_FUNCTION)(const uint8_t *buffer, size_t _buffersize);
-
-// write function to the parent device 
-//void (*WRITE_PARENT_FUNCTION)(struct stDevice _parent, const uint8_t *buffer, size_t _buffersize);
-//void (*READ_PARENT_FUNCTION)(struct stDevice _parent, const uint8_t *buffer, size_t _buffersize);
+void AddDevice();
+void DeleteDevice();
 
 typedef struct stDevice {
   char name[UINT8_MAX];
-  uint16_t u16_max_payload_size;
   struct stDevice *stDeviceParent;
   struct stDevice *stDevices[BP_MAX_DEVICES];
   struct stIO     *stIOs[BP_MAX_IO];
   // data structures
-  struct stBubble stBSend, stBReceive; // buffers to send and receive must be initialized
+  char bufferIN[UINT8_MAX];
+  char bufferOUT[UINT8_MAX];
   void (*write)(const uint8_t *buffer, size_t _buffersize);
   void (*read)(const uint8_t *buffer, size_t _buffersize);
 } stDevice;
