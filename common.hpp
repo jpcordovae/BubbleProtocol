@@ -1,17 +1,15 @@
-#ifndef __GPS_BASE_HPP__
-#define __GPS_BASE_HPP__
+#ifndef BUBBLE_BASE_
+#define BUBBLE_BASE_
 
-#include <iostream>
-#include <ctime>
-#include <vector>
+#define	RET_OK							 0
+#define RET_ERROR_DEVICE_IS_NULL		-1
+#define RET_ERROR_DEVICE_ALREADY_EXIST	-2
+#define RET_ERROR_DEVICE_NOT_FOUND		-3
+#define RET_ERROR_DEVICE_UNSINCED		-4
+#define RET_ERROR_IO_ALREADY_EXIST      -5
+#define RET_ERROR_IO_NOT_FOUND			-6
 
-#include <boost/date_time.hpp>
-#include <boost/shared_ptr.hpp>
 
-//std::string timestamp_sql();
-
-typedef std::vector<boost::uint8_t> buffertype;
-typedef boost::shared_ptr<buffertype> buffertype_ptr;
 
 #endif
 

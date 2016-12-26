@@ -203,7 +203,11 @@ private:
 		{
 			printf("connection closed cleanly by peer\n");
 			do_close();
+#ifdef __WIN32
+			Sleep(2000);
+#elseif __linux
 			sleep(2);
+#endif
 		} else if (error) {
 			throw boost::system::system_error(error); // Some other error.  if( ! error ) 
 		}
